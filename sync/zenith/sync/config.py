@@ -101,6 +101,9 @@ class OIDCConfig(Section):
     #: pre-select an identity provider
     #: See https://oauth2-proxy.github.io/oauth2-proxy/docs/configuration/alpha-config#loginurlparameter
     forwarded_query_params: t.List[ForwardedQueryParam] = Field(default_factory = list)
+    #: The headers to inject into the request from claims in the ID token
+    #: The special claims id_token and access_token represent the ID and access tokens
+    inject_request_headers: t.Dict[str, str] = Field(default_factory = dict)
 
 
 class ExternalAuthConfig(Section):
@@ -134,6 +137,8 @@ class TLSConfig(Section):
     """
     #: Indicates whether TLS should be enabled
     enabled: bool = True
+    #: Indicates if the ingress controller is itself behind a proxy that is terminating TLS
+    terminated_at_proxy: bool = False
     #: The name of a secret containing a wildcard certificate
     secret_name: t.Optional[str] = None
     #: Annotations to add to ingress resources that are TLS-specific
@@ -146,6 +151,8 @@ class IngressConfig(Section):
     """
     #: Base domain for the proxied services
     base_domain: DomainName
+    #: Indicates whether the subdomain should be used as a path prefix
+    subdomain_as_path_prefix: bool = False
     #: Annotations to add to all ingress resources
     annotations: t.Dict[str, str] = Field(default_factory = dict)
     #: The TLS configuration

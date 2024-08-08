@@ -7,17 +7,17 @@ metadata:
     {{- include "zenith-service.ingress.annotations" . | nindent 4 }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
-  {{- if .Values.global.secure }}
+  {{- if and .Values.global.secure (not .Values.ingress.tls.terminatedAtProxy) }}
   tls:
     - hosts:
-        - {{ .Values.global.domain }}
+        - {{ include "zenith-service.ingress.host" . }}
       secretName: {{ include "zenith-service.ingress.tls.secretName" . }}
   {{- end }}
   rules:
-    - host: {{ .Values.global.domain | required "domain is required" }}
+    - host: {{ include "zenith-service.ingress.host" . }}
       http:
         paths:
-          - path: "/"
+          - path: {{ include "zenith-service.ingress.pathPrefix" . | quote }}
             pathType: Prefix
             backend:
               service:

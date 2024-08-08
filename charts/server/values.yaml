@@ -6,6 +6,8 @@ global:
     # The base domain to use for services exposed by Zenith
     # Proxied services will be made available at <subdomain>.<base domain>
     baseDomain:
+    #: Indicates whether the subdomain should be used as a path prefix
+    subdomainAsPathPrefix: false
     # The ingress class to use
     className: nginx
     # The common annotations for all ingress resources
@@ -14,6 +16,8 @@ global:
     tls:
       # Indicates if TLS should be enabled
       enabled: true
+      # Indicates if the ingress controller is itself behind a proxy that is terminating TLS
+      terminatedAtProxy: false
       # The name of a secret containing a wildcard certificate
       secretName:
       # TLS-specific annotations for ingress resources
@@ -34,7 +38,14 @@ sync:
   # Configuration for the sync component
   config:
     kubernetes:
-      ingress: {}
+      ingress:
+        oidc:
+          injectRequestHeaders:
+            X-Remote-User: preferred_username
+            X-Remote-Group: groups
+            # To inject the id and/or access tokens in the named headers, include the following:
+            # X-Auth-ID-Token: id_token
+            # X-Auth-Access-Token: access_token
   # The image to use for the sync component
   image:
     repository: ghcr.io/azimuth-cloud/zenith-sync

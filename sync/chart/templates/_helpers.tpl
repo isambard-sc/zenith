@@ -49,7 +49,11 @@ nginx.ingress.kubernetes.io/proxy-read-timeout: {{ quote . }}
 Annotations for TLS.
 */}}
 {{- define "zenith-service.ingress.tls.annotations" -}}
-{{- if not .Values.ingress.tls.existingCertificate.cert }}
+{{-
+  if and
+    (not .Values.ingress.tls.terminatedAtProxy)
+    (not .Values.ingress.tls.existingCertificate.cert)
+}}
 {{- with .Values.ingress.tls.annotations }}
 {{ toYaml . }}
 {{- end }}
@@ -91,11 +95,17 @@ Annotations for OIDC auth.
 */}}
 {{- define "zenith-service.ingress.auth.oidc.annotations" -}}
 {{- $scheme := ternary "https" "http" .Values.global.secure }}
+{{- $host := include "zenith-service.ingress.host" . }}
 {{- $oidcReleaseName := printf "%s-oidc" .Release.Name }}
-{{- $prefix := index .Values.oidc.extraArgs "proxy-prefix" }}
-nginx.ingress.kubernetes.io/auth-url: "http://{{ $oidcReleaseName }}.{{ .Release.Namespace }}.svc.cluster.local{{ $prefix }}/auth"
-nginx.ingress.kubernetes.io/auth-signin: "{{ $scheme }}://{{ .Values.global.domain }}{{ $prefix }}/start??rd=$escaped_request_uri&$args"
-nginx.ingress.kubernetes.io/auth-response-headers: "X-Remote-User,X-Remote-Group"
+{{- $prefix := tpl (index .Values.oidc.extraArgs "proxy-prefix") . }}
+nginx.ingress.kubernetes.io/auth-url: >-
+  http://{{ $oidcReleaseName }}.{{ .Release.Namespace }}.svc.cluster.local{{ $prefix }}/auth
+nginx.ingress.kubernetes.io/auth-signin: >-
+  {{ $scheme }}://{{ $host }}{{ $prefix }}/start?rd=$escaped_request_uri&$args
+{{- with .Values.oidc.alphaConfig.configData.injectResponseHeaders }}
+nginx.ingress.kubernetes.io/auth-response-headers: >-
+  {{ range $i, $rh := . }}{{ if $i }},{{ end }}{{ $rh.name }}{{ end }}
+{{- end }}
 nginx.ingress.kubernetes.io/configuration-snippet: |
   auth_request_set $auth_cookie__oauth2_proxy_1 $upstream_cookie__oauth2_proxy_1;
   auth_request_set $auth_cookie__oauth2_proxy_2 $upstream_cookie__oauth2_proxy_2;
@@ -136,4 +146,27 @@ Name for the TLS client CA secret.
 */}}
 {{- define "zenith-service.ingress.tls.clientCASecretName" -}}
 {{- printf "tls-client-ca-%s" .Release.Name }}
+{{- end }}
+
+{{/*
+The host to use for ingress resources.
+*/}}
+{{- define "zenith-service.ingress.host" -}}
+{{- $baseDomain := required "baseDomain is required" .Values.global.baseDomain -}}
+{{- $subdomain := required "subdomain is required" .Values.global.subdomain -}}
+{{-
+  ternary
+    $baseDomain
+    (printf "%s.%s" $subdomain $baseDomain)
+    .Values.global.subdomainAsPathPrefix
+-}}
+{{- end }}
+
+{{/*
+The path prefix to use for ingress resources.
+*/}}
+{{- define "zenith-service.ingress.pathPrefix" -}}
+{{- $baseDomain := required "baseDomain is required" .Values.global.baseDomain -}}
+{{- $subdomain := required "subdomain is required" .Values.global.subdomain -}}
+{{- ternary (printf "/%s" $subdomain) "/" .Values.global.subdomainAsPathPrefix -}}
 {{- end }}

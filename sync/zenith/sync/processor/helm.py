@@ -148,10 +148,15 @@ class Processor(base.Processor):
         # Build the core values for the service
         values = {
             "global": {
-                "domain": f"{service.name}.{self.config.ingress.base_domain}",
+                "baseDomain": self.config.ingress.base_domain,
+                "subdomain": service.name,
+                "subdomainAsPathPrefix": self.config.ingress.subdomain_as_path_prefix,
             },
             "endpoints": [dataclasses.asdict(ep) for ep in service.endpoints],
             "protocol": service.config.get("backend-protocol", "http"),
+            "ingress": {
+                "annotations": self.config.ingress.annotations,
+            },
         }
         read_timeout = service.config.get("read-timeout")
         if read_timeout:
@@ -178,6 +183,8 @@ class Processor(base.Processor):
                 "cert": service.config["tls-cert"],
                 "key": service.config["tls-key"],
             }
+        elif self.config.ingress.tls.terminated_at_proxy:
+            tls_values["terminatedAtProxy"] = True
         elif self.config.ingress.tls.secret_name:
             tls_values["secretName"] = self.config.ingress.tls.secret_name
         else:
@@ -222,6 +229,14 @@ class Processor(base.Processor):
                     "loginURLParameters": self.config.ingress.oidc.forwarded_query_params,
                     "oidcConfig": {
                         "issuerURL": issuer_url,
+                    },
+                },
+                "alphaConfig": {
+                    "configData": {
+                        "injectResponseHeaders": [
+                            {"name": h, "values": [{"claim": c}]}
+                            for h, c in self.config.ingress.oidc.inject_request_headers.items()
+                        ],
                     },
                 },
                 "extraArgs": {
