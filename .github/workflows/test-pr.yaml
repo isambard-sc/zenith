@@ -11,6 +11,12 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  packages: write         # required for pushing container images
+  id-token: write         # needed for signing the images with GitHub OIDC Token
+  security-events: write  # required for pushing SARIF files
+
 # Use the head ref for workflow concurrency, with cancellation
 # This should mean that any previous workflows for a PR get cancelled when a new commit is pushed
 concurrency:
@@ -22,11 +28,10 @@ jobs:
   fail_on_remote:
     runs-on: ubuntu-latest
     steps:
-      - name: PR must be from a branch in the stackhpc/zenith repo
-        run: exit ${{ github.event.pull_request.head.repo.full_name == 'stackhpc/zenith' && '0' || '1' }}
+      - name: PR must be from a branch in the azimuth-cloud/zenith repo
+        run: exit ${{ github.event.pull_request.head.repo.full_name == 'azimuth-cloud/zenith' && '0' || '1' }}
 
   publish_artifacts:
-    needs: [fail_on_remote]
     uses: ./.github/workflows/build-push-artifacts.yaml
     with:
       ref: ${{ github.event.pull_request.head.sha }}
