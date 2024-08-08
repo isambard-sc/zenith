@@ -69,7 +69,7 @@ jobs:
         id: image-meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/stackhpc/zenith-${{ matrix.component }}
+          images: ghcr.io/isambard/zenith-${{ matrix.component }}
           # Produce the branch name or tag and the SHA as tags
           tags: |
             type=ref,event=branch
@@ -109,7 +109,7 @@ jobs:
               --dest-creds ${{ github.actor }}:${{ secrets.GITHUB_TOKEN }} \
               --all \
               skopeo-manifest.yml \
-              ghcr.io/stackhpc/zenith
+              ghcr.io/isambard-sc/zenith
 
   build_push_chart:
     name: Build and push Helm chart
