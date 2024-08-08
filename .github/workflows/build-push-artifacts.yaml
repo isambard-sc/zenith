@@ -10,6 +10,7 @@ on:
       - "*"
   # Also allow publication to be done via a workflow call
   # In this case, the chart version is returned as an output
+  workflow_dispatch:
   pull_request_target:
     types:
       - opened
