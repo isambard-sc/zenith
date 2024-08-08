@@ -48,7 +48,7 @@ sync:
             # X-Auth-Access-Token: access_token
   # The image to use for the sync component
   image:
-    repository: ghcr.io/stackhpc/zenith-sync
+    repository: ghcr.io/isambard-sc/zenith-sync
     pullPolicy: IfNotPresent
     tag: ""  # Defaults to appVersion if not given
   imagePullSecrets: []
@@ -78,7 +78,7 @@ sshd:
   config: {}
   # The image to use for the SSHD server
   image:
-    repository: ghcr.io/stackhpc/zenith-sshd
+    repository: ghcr.io/isambard-sc/zenith-sshd
     pullPolicy: IfNotPresent
     tag: ""  # Defaults to appVersion if not given
   imagePullSecrets: []
@@ -129,7 +129,7 @@ registrar:
     subdomain: registrar
   # The image to use for the registrar
   image:
-    repository: ghcr.io/stackhpc/zenith-registrar
+    repository: ghcr.io/isambard-sc/zenith-registrar
     pullPolicy: IfNotPresent
     tag: ""  # Defaults to appVersion if not given
   imagePullSecrets: []
